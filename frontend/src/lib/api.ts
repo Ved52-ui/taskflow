@@ -3,6 +3,9 @@ import axios from 'axios';
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 export const authApi = {
@@ -12,10 +15,10 @@ export const authApi = {
 };
 
 export const tasksApi = {
-  list:   ()                      => api.get('/api/tasks/'),
-  create: (data: unknown)         => api.post('/api/tasks/', data),
+  list:   ()                          => api.get('/api/tasks/'),
+  create: (data: unknown)             => api.post('/api/tasks/', data),
   update: (id: string, data: unknown) => api.patch(`/api/tasks/${id}`, data),
-  remove: (id: string)            => api.delete(`/api/tasks/${id}`),
+  remove: (id: string)                => api.delete(`/api/tasks/${id}`),
 };
 
 export const usersApi = {

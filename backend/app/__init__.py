@@ -8,17 +8,25 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
-    app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_PERMANENT'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SECRET_KEY']           = os.environ['SECRET_KEY']
+    app.config['SESSION_TYPE']         = 'filesystem'
+    app.config['SESSION_PERMANENT']    = True
+    app.config['SESSION_FILE_DIR']     = './flask_sessions'
+    app.config['SESSION_COOKIE_NAME']  = 'taskflow_session'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE']   = False
 
     Session(app)
-    CORS(app, supports_credentials=True,
-         origins=[os.environ.get('FRONTEND_URL', 'http://localhost:3000')])
 
-    from .routes.auth import auth_bp
+    CORS(app,
+         supports_credentials=True,
+         origins=[os.environ.get('FRONTEND_URL', 'http://localhost:3000')],
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
+    )
+
+    from .routes.auth  import auth_bp
     from .routes.tasks import tasks_bp
     from .routes.users import users_bp
     app.register_blueprint(auth_bp,  url_prefix='/auth')
