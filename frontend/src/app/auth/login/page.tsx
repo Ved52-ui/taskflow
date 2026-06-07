@@ -247,16 +247,7 @@ export default function LoginPage() {
               Continue with Google
             </button>
 
-            <div className="pills">
-              {[
-               
-              ].map(p => (
-                <div key={p.text} className="pill">
-                  <span className="pill-icon">{p.icon}</span>
-                  {p.text}
-                </div>
-              ))}
-            </div>
+            
           </div>
 
           <p className="footer-note">
