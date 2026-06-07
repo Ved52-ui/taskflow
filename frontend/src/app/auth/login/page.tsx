@@ -229,7 +229,7 @@ export default function LoginPage() {
         <div className="card">
           <div className="card-inner">
             <div className="logo">TaskFlow<span className="logo-dot">.</span></div>
-            <p className="tagline">Assign, track, and ship tasks — together.</p>
+            <p className="tagline">Assign, track, and ship tasks — together. BY VED...</p>
 
             <div className="sep">
               <div className="sep-line"/>
@@ -249,10 +249,7 @@ export default function LoginPage() {
 
             <div className="pills">
               {[
-                {icon:'⚡', text:'Fast'},
-                {icon:'🔒', text:'Secure'},
-                {icon:'📧', text:'Email alerts'},
-                {icon:'👥', text:'Teams'},
+               
               ].map(p => (
                 <div key={p.text} className="pill">
                   <span className="pill-icon">{p.icon}</span>
