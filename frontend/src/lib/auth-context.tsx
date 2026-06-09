@@ -35,7 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { fetchUser(); }, []);
 
   const logout = async () => {
-    await authApi.logout();
+    localStorage.removeItem('taskflow_token');
+    await authApi.logout().catch(() => {});
     setUser(null);
     window.location.href = '/auth/login';
   };

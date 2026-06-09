@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, request, session, jsonify
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-import os, warnings, requests as http_requests
+import os, warnings, requests as http_requests, jwt, datetime
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -27,6 +27,29 @@ def sb_headers():
 
 def sb_url(path):
     return f"{os.environ['SUPABASE_URL']}/rest/v1/{path}"
+
+def make_jwt(user: dict) -> str:
+    payload = {
+        'user_id':    user['id'],
+        'user_email': user['email'],
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30)
+    }
+    return jwt.encode(payload, os.environ['SECRET_KEY'], algorithm='HS256')
+
+def get_current_user():
+    token = None
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    if not token:
+        token = request.cookies.get('taskflow_token')
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, os.environ['SECRET_KEY'], algorithms=['HS256'])
+        return payload
+    except Exception:
+        return None
 
 def make_flow():
     return Flow.from_client_config(
@@ -76,55 +99,42 @@ def google_callback():
     full_name  = id_info.get('name', '')
     avatar_url = id_info.get('picture', '')
 
-    # Check if user exists
-    check = http_requests.get(
-        sb_url(f"users?google_id=eq.{google_id}&select=*"),
-        headers=sb_headers()
-    )
+    check    = http_requests.get(sb_url(f"users?google_id=eq.{google_id}&select=*"), headers=sb_headers())
     existing = check.json() if isinstance(check.json(), list) else []
 
     if len(existing) > 0:
-        update = http_requests.patch(
-            sb_url(f"users?google_id=eq.{google_id}"),
-            headers=sb_headers(),
-            json={'email': email, 'full_name': full_name, 'avatar_url': avatar_url}
-        )
-        result = update.json()
-        user   = result[0] if isinstance(result, list) and result else existing[0]
+        upd  = http_requests.patch(sb_url(f"users?google_id=eq.{google_id}"), headers=sb_headers(),
+                                   json={'email': email, 'full_name': full_name, 'avatar_url': avatar_url})
+        res  = upd.json()
+        user = res[0] if isinstance(res, list) and res else existing[0]
     else:
-        insert = http_requests.post(
-            sb_url("users"),
-            headers=sb_headers(),
-            json={
-                'google_id':  google_id,
-                'email':      email,
-                'full_name':  full_name,
-                'avatar_url': avatar_url,
-            }
-        )
-        result = insert.json()
-        if isinstance(result, list) and result:
-            user = result[0]
-        elif isinstance(result, dict) and 'id' in result:
-            user = result
+        ins  = http_requests.post(sb_url("users"), headers=sb_headers(),
+                                  json={'google_id': google_id, 'email': email,
+                                        'full_name': full_name, 'avatar_url': avatar_url})
+        res  = ins.json()
+        if isinstance(res, list) and res:
+            user = res[0]
+        elif isinstance(res, dict) and 'id' in res:
+            user = res
         else:
-            return jsonify({'error': 'Failed to create user'}), 500
+            return redirect(f"{os.environ['FRONTEND_URL']}/auth/login?error=failed")
 
+    # Store tokens in session for Gmail use
     session['user_id']              = user['id']
-    session['user_email']           = user['email']
     session['google_access_token']  = creds.token
     session['google_refresh_token'] = creds.refresh_token
 
-    return redirect(f"{os.environ['FRONTEND_URL']}/dashboard")
+    # Create JWT and redirect with it
+    token    = make_jwt(user)
+    frontend = os.environ['FRONTEND_URL']
+    return redirect(f"{frontend}/auth/callback?token={token}")
 
 @auth_bp.route('/me')
 def me():
-    if 'user_id' not in session:
+    payload = get_current_user()
+    if not payload:
         return jsonify({'error': 'Unauthenticated'}), 401
-    resp = http_requests.get(
-        sb_url(f"users?id=eq.{session['user_id']}&select=*"),
-        headers=sb_headers()
-    )
+    resp = http_requests.get(sb_url(f"users?id=eq.{payload['user_id']}&select=*"), headers=sb_headers())
     data = resp.json()
     if not isinstance(data, list) or len(data) == 0:
         return jsonify({'error': 'User not found'}), 404

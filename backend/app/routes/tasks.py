@@ -17,10 +17,13 @@ def url(path):
 
 def require_auth(f):
     from functools import wraps
+    from .auth import get_current_user
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session:
+        user = get_current_user()
+        if not user:
             return jsonify({'error': 'Unauthorized'}), 401
+        request.current_user = user
         return f(*args, **kwargs)
     return decorated
 
