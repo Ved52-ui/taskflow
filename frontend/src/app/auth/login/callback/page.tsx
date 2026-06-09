@@ -1,7 +1,6 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 
 function CallbackHandler() {
   const router       = useRouter();
@@ -11,23 +10,34 @@ function CallbackHandler() {
     const token = searchParams.get('token');
     if (token) {
       localStorage.setItem('taskflow_token', token);
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } else {
-      router.push('/auth/login');
+      window.location.href = '/auth/login';
     }
-  }, [router, searchParams]);
+  }, []);
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',
-      justifyContent:'center',background:'#f0efea',fontFamily:'sans-serif'}}>
-      <p style={{color:'#999'}}>Signing you in…</p>
+    <div style={{
+      minHeight:'100vh', display:'flex', alignItems:'center',
+      justifyContent:'center', background:'#f0efea',
+      fontFamily:'DM Sans, sans-serif'
+    }}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:32, marginBottom:12}}>⚡</div>
+        <p style={{color:'#999', fontSize:14}}>Signing you in…</p>
+      </div>
     </div>
   );
 }
 
 export default function CallbackPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'#f0efea'}}/>}>
+    <Suspense fallback={
+      <div style={{minHeight:'100vh', background:'#f0efea', display:'flex',
+        alignItems:'center', justifyContent:'center'}}>
+        <p style={{color:'#999', fontFamily:'sans-serif'}}>Loading…</p>
+      </div>
+    }>
       <CallbackHandler />
     </Suspense>
   );
