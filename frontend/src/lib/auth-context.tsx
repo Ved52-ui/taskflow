@@ -6,25 +6,33 @@ import { authApi } from './api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  refetch: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  refetch: async () => {},
   logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser]     = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    authApi.me()
-      .then(r => setUser(r.data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchUser = async () => {
+    try {
+      const r = await authApi.me();
+      setUser(r.data);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchUser(); }, []);
 
   const logout = async () => {
     await authApi.logout();
@@ -33,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, refetch: fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

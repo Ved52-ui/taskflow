@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_cors import CORS
 from flask_session import Session
 from dotenv import load_dotenv
@@ -26,12 +26,14 @@ def create_app():
          methods=['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
     )
 
-    from .routes.auth  import auth_bp
-    from .routes.tasks import tasks_bp
-    from .routes.users import users_bp
-    app.register_blueprint(auth_bp,  url_prefix='/auth')
-    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
-    app.register_blueprint(users_bp, url_prefix='/api/users')
+    from .routes.auth       import auth_bp
+    from .routes.tasks      import tasks_bp
+    from .routes.users      import users_bp
+    from .routes.email_auth import email_bp
+    app.register_blueprint(auth_bp,   url_prefix='/auth')
+    app.register_blueprint(email_bp,  url_prefix='/auth/email')
+    app.register_blueprint(tasks_bp,  url_prefix='/api/tasks')
+    app.register_blueprint(users_bp,  url_prefix='/api/users')
 
     @app.route('/health')
     def health():

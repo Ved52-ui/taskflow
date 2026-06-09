@@ -47,10 +47,10 @@ def make_flow():
 def google_login():
     flow = make_flow()
     auth_url, state = flow.authorization_url(
-    access_type='offline',
-    prompt='consent',
-    include_granted_scopes='true'
-)
+        access_type='offline',
+        prompt='consent',
+        include_granted_scopes='true'
+    )
     session['oauth_state'] = state
     return redirect(auth_url)
 
@@ -76,41 +76,23 @@ def google_callback():
     full_name  = id_info.get('name', '')
     avatar_url = id_info.get('picture', '')
 
-    print(f"[AUTH] Google ID: {google_id}, Email: {email}")
-
     # Check if user exists
-    check_resp = http_requests.get(
+    check = http_requests.get(
         sb_url(f"users?google_id=eq.{google_id}&select=*"),
         headers=sb_headers()
     )
-    print(f"[AUTH] Check response status: {check_resp.status_code}")
-    print(f"[AUTH] Check response body:   {check_resp.text}")
+    existing = check.json() if isinstance(check.json(), list) else []
 
-    existing_list = check_resp.json()
-
-    # existing_list should be a list
-    if not isinstance(existing_list, list):
-        existing_list = []
-
-    if len(existing_list) > 0:
-        # User exists — update their info
-        print("[AUTH] User exists, updating...")
-        update_resp = http_requests.patch(
+    if len(existing) > 0:
+        update = http_requests.patch(
             sb_url(f"users?google_id=eq.{google_id}"),
             headers=sb_headers(),
-            json={
-                'email':      email,
-                'full_name':  full_name,
-                'avatar_url': avatar_url,
-            }
+            json={'email': email, 'full_name': full_name, 'avatar_url': avatar_url}
         )
-        print(f"[AUTH] Update status: {update_resp.status_code}, body: {update_resp.text}")
-        updated = update_resp.json()
-        user = updated[0] if isinstance(updated, list) and len(updated) > 0 else existing_list[0]
+        result = update.json()
+        user   = result[0] if isinstance(result, list) and result else existing[0]
     else:
-        # New user — insert
-        print("[AUTH] New user, inserting...")
-        insert_resp = http_requests.post(
+        insert = http_requests.post(
             sb_url("users"),
             headers=sb_headers(),
             json={
@@ -120,18 +102,13 @@ def google_callback():
                 'avatar_url': avatar_url,
             }
         )
-        print(f"[AUTH] Insert status: {insert_resp.status_code}, body: {insert_resp.text}")
-        inserted = insert_resp.json()
-
-        if isinstance(inserted, list) and len(inserted) > 0:
-            user = inserted[0]
-        elif isinstance(inserted, dict) and 'id' in inserted:
-            user = inserted
+        result = insert.json()
+        if isinstance(result, list) and result:
+            user = result[0]
+        elif isinstance(result, dict) and 'id' in result:
+            user = result
         else:
-            print(f"[AUTH] ERROR: unexpected insert response: {inserted}")
-            return jsonify({'error': 'Failed to create user', 'detail': str(inserted)}), 500
-
-    print(f"[AUTH] Final user: {user}")
+            return jsonify({'error': 'Failed to create user'}), 500
 
     session['user_id']              = user['id']
     session['user_email']           = user['email']
