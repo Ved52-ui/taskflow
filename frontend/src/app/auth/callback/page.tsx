@@ -1,12 +1,15 @@
 'use client';
-import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
-function CallbackHandler() {
-  const searchParams = useSearchParams();
-
+export default function CallbackPage() {
   useEffect(() => {
-    const token = searchParams.get('token');
+    // Read token from URL hash (e.g. /auth/callback#eyJ...)
+    const hash  = window.location.hash.slice(1);
+    // Also try query param as fallback
+    const params = new URLSearchParams(window.location.search);
+    const query  = params.get('token');
+    const token  = hash || query;
+
     if (token) {
       localStorage.setItem('taskflow_token', token);
       window.location.replace('/dashboard');
@@ -17,25 +20,17 @@ function CallbackHandler() {
 
   return (
     <div style={{
-      minHeight:'100vh', display:'flex', flexDirection:'column',
-      alignItems:'center', justifyContent:'center',
-      background:'#f0efea', fontFamily:'DM Sans, sans-serif', gap:16
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#f0efea',
+      fontFamily: 'sans-serif',
+      gap: '16px'
     }}>
-      <div style={{fontSize:36}}>⚡</div>
-      <p style={{color:'#999', fontSize:14}}>Signing you in…</p>
+      <div style={{ fontSize: '36px' }}>⚡</div>
+      <p style={{ color: '#999', fontSize: '14px' }}>Signing you in…</p>
     </div>
-  );
-}
-
-export default function CallbackPage() {
-  return (
-    <Suspense fallback={
-      <div style={{minHeight:'100vh', background:'#f0efea',
-        display:'flex', alignItems:'center', justifyContent:'center'}}>
-        <p style={{color:'#999', fontFamily:'sans-serif', fontSize:14}}>Loading…</p>
-      </div>
-    }>
-      <CallbackHandler />
-    </Suspense>
   );
 }
