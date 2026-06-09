@@ -31,8 +31,8 @@ export default function LoginPage() {
     try {
       const endpoint = mode === 'login' ? '/auth/email/login' : '/auth/email/register';
       const payload  = mode === 'login' ? { email, password } : { email, password, full_name: name };
-      await api.post(endpoint, payload);
-      // Refetch auth state then redirect
+      const res      = await api.post(endpoint, payload);
+      localStorage.setItem('taskflow_token', res.data.token);
       await refetch();
       window.location.href = '/dashboard';
     } catch (err: any) {

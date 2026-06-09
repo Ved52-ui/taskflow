@@ -15,7 +15,9 @@ def url(path):
 
 @users_bp.route('/', methods=['GET'])
 def get_users():
-    if 'user_id' not in session:
+    from .auth import get_current_user
+    user = get_current_user()
+    if not user:
         return jsonify({'error': 'Unauthorized'}), 401
     r = http_requests.get(
         url("users?select=id,email,full_name,avatar_url"),

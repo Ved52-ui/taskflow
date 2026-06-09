@@ -1,16 +1,25 @@
 import axios from 'axios';
 
+const getToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('taskflow_token');
+};
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+});
+
+api.interceptors.request.use(config => {
+  const token = getToken();
+  if (token) config.headers['Authorization'] = `Bearer ${token}`;
+  return config;
 });
 
 export const authApi = {
   me:       () => api.get('/auth/me'),
-  logout:   () => api.post('/auth/logout'),
+  logout:   () => { localStorage.removeItem('taskflow_token'); return api.post('/auth/logout'); },
   loginUrl: () => `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`,
 };
 

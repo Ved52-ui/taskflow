@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from ..services.email import send_task_assigned, send_task_completed
+from .auth import get_current_user
 import os, requests as http_requests
 
 tasks_bp = Blueprint('tasks', __name__)
@@ -19,13 +20,15 @@ def require_auth(f):
     from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session:
+        user = get_current_user()
+        if not user:
             return jsonify({'error': 'Unauthorized'}), 401
+        request.current_user = user
         return f(*args, **kwargs)
     return decorated
 
 def get_user(user_id):
-    r = http_requests.get(url(f"users?id=eq.{user_id}&select=*"), headers=headers())
+    r    = http_requests.get(url(f"users?id=eq.{user_id}&select=*"), headers=headers())
     data = r.json()
     return data[0] if data else None
 
@@ -47,11 +50,12 @@ def get_tasks():
 @require_auth
 def create_task():
     data     = request.get_json()
+    cur_user = request.current_user
     new_task = {
         'title':       data['title'],
         'description': data.get('description', ''),
         'priority':    data.get('priority', 'medium'),
-        'creator_id':  session['user_id'],
+        'creator_id':  cur_user['user_id'],
     }
     if data.get('due_date'):
         new_task['due_date']    = data['due_date']
@@ -64,7 +68,7 @@ def create_task():
     if data.get('assignee_id'):
         try:
             assignee = get_user(data['assignee_id'])
-            creator  = get_user(session['user_id'])
+            creator  = get_user(cur_user['user_id'])
             if assignee and creator:
                 send_task_assigned(
                     to_email=assignee['email'],
@@ -81,9 +85,9 @@ def create_task():
 @tasks_bp.route('/<task_id>', methods=['PATCH'])
 @require_auth
 def update_task(task_id):
-    data = request.get_json()
+    data     = request.get_json()
+    cur_user = request.current_user
 
-    # Get old task before update
     old_r = http_requests.get(url(f"tasks?id=eq.{task_id}&select=*"), headers=headers())
     old   = old_r.json()[0] if old_r.json() else {}
 
@@ -92,8 +96,8 @@ def update_task(task_id):
 
     if data.get('status') == 'done' and old.get('status') != 'done':
         try:
-            completer = get_user(session['user_id'])
-            creator   = get_user(old['creator_id']) if old.get('creator_id') else None
+            completer = get_user(cur_user['user_id'])
+            creator   = get_user(old['creator_id'])  if old.get('creator_id')  else None
             assignee  = get_user(old['assignee_id']) if old.get('assignee_id') else None
 
             recipients = set()
