@@ -127,7 +127,7 @@ def google_callback():
     # Create JWT and redirect with it
     token    = make_jwt(user)
     frontend = os.environ['FRONTEND_URL']
-    return redirect(f"{frontend}/auth/callback?token={token}")
+    return redirect(f"{frontend}/auth/login/callback?token={token}")
 
 @auth_bp.route('/me')
 def me():
