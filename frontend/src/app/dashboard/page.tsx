@@ -18,6 +18,15 @@ export default function DashboardPage() {
   const [showCreate, setShowCreate]   = useState(false);
   const [filter, setFilter]           = useState<Filter>('all');
   const [fetching, setFetching]       = useState(true);
+  // Handle Google OAuth token redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+    if (token) {
+      localStorage.setItem('taskflow_token', token);
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
   const [showProfile, setShowProfile] = useState(false);
   const [profileImg, setProfileImg]   = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
