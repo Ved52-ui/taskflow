@@ -26,28 +26,6 @@
 
 ---
 
-## 📸 Screenshots
-
-<div align="center">
-
-### 🔐 Login Page — Animated Light Theme
-![Login Page](https://via.placeholder.com/900x500/f0efea/6366f1?text=TaskFlow+Login+%E2%80%94+Animated+Grid+%2B+Orbs+%2B+Google+OAuth)
-
-> *Animated grid background, floating colour orbs, rising particles — Sign in with Google or Email/Password*
-
----
-
-### 📋 Dashboard — Task Management
-![Dashboard](https://via.placeholder.com/900x500/f8f8f6/6366f1?text=TaskFlow+Dashboard+%E2%80%94+Stats+%2B+Filters+%2B+Task+Cards)
-
-> *Real-time stats, filter tabs, animated task cards with priority indicators and assignee badges*
-
----
-
-### ➕ Create Task Modal
-![Create Task](https://via.placeholder.com/900x500/ffffff/6366f1?text=Create+Task+Modal+%E2%80%94+Priority+%2B+Assign+%2B+Due+Date)
-
-> *Slide-in modal with priority selector, user assignment dropdown, due date picker*
 
 </div>
 
@@ -367,17 +345,17 @@ FLASK_ENV=development
 SECRET_KEY=your-secret-key-min-32-chars
 
 # Google OAuth + Gmail
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:5000/auth/google/callback
+GOOGLE_CLIENT_ID=your--------------------------------------
+GOOGLE_CLIENT_SECRET=y---------------------------------
+GOOGLE_REDIRECT_URI=----------------------------
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJ...your-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=eyJ..-----------------
 
 # App
 FRONTEND_URL=http://localhost:3000
-GMAIL_SENDER_EMAIL=your-email@gmail.com
+GMAIL_SENDER_EMAIL=-----------------
 ```
 
 ### Frontend (`frontend/.env.local`)
