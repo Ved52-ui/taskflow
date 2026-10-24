@@ -1,7 +1,7 @@
 # OAuth Flow Diagram
 
 ## How Login Works (Simplified)
-jr
+j
 ```
 ┌─────────────┐          ┌──────────────────┐       ┌───────────┐
 │   Vercel    │          │  Railway Backend │       │  Google   │
